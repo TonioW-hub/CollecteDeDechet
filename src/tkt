@@ -1,0 +1,61 @@
+if(hVoisins.nomDeLaRue.equals(hActuelle.nomDeLaRue)){
+                if(!hActuelle.sensRue){
+                    if(!coordX.contains(hActuelle.coordX + 110) && !coordY.contains(hActuelle.coordY)) {
+                        hVoisins.coordX = hActuelle.coordX + 110;
+                        coordX.add(hVoisins.coordX);
+                        hVoisins.coordY = hActuelle.coordY;
+                        coordY.add(hVoisins.coordY);
+                        hVoisins.sensRue = hActuelle.sensRue;
+                    } else {
+                        hVoisins.coordX = hActuelle.coordX - 110;
+                        coordX.add(hVoisins.coordX);
+                        hVoisins.coordY = hActuelle.coordY;
+                        coordY.add(hVoisins.coordY);
+                        hVoisins.sensRue = hActuelle.sensRue;
+                    }
+                } else {
+                    if(!coordX.contains(hActuelle.coordX) && !coordY.contains(hActuelle.coordY + 110)) {
+                        hVoisins.coordX = hActuelle.coordX;
+                        coordX.add(hVoisins.coordX);
+                        hVoisins.coordY = hActuelle.coordY + 110;
+                        coordY.add(hVoisins.coordY);
+                        hVoisins.sensRue = hActuelle.sensRue;
+                    } else {
+                        hVoisins.coordX = hActuelle.coordX;
+                        coordX.add(hVoisins.coordX);
+                        hVoisins.coordY = hActuelle.coordY - 110;
+                        coordY.add(hVoisins.coordY);
+                        hVoisins.sensRue = hActuelle.sensRue; 
+                    }
+                }
+            } else {
+                if(!hActuelle.sensRue){
+                    if(!coordX.contains(hActuelle.coordX) && !coordY.contains(hActuelle.coordY + 110)) {
+                        hVoisins.coordX = hActuelle.coordX;
+                        coordX.add(hVoisins.coordX);
+                        hVoisins.coordY = hActuelle.coordY + 110;
+                        coordY.add(hVoisins.coordY);
+                        hVoisins.sensRue = (!hActuelle.sensRue);
+                    } else {
+                        hVoisins.coordX = hActuelle.coordX;
+                        coordX.add(hVoisins.coordX);
+                        hVoisins.coordY = hActuelle.coordY - 110;
+                        coordY.add(hVoisins.coordY);
+                        hVoisins.sensRue = (!hActuelle.sensRue);    
+                    }
+                } else {
+                    if(!coordX.contains(hActuelle.coordX + 110) && !coordY.contains(hActuelle.coordY)) {
+                        hVoisins.coordX = hActuelle.coordX + 110;
+                        coordX.add(hVoisins.coordX);
+                        hVoisins.coordY = hActuelle.coordY;
+                        coordY.add(hVoisins.coordY);
+                        hVoisins.sensRue = (!hActuelle.sensRue);
+                    } else {
+                        hVoisins.coordX = hActuelle.coordX - 110;
+                        coordX.add(hVoisins.coordX);
+                        hVoisins.coordY = hActuelle.coordY;
+                        coordY.add(hVoisins.coordY);
+                        hVoisins.sensRue = (!hActuelle.sensRue);
+                    }
+                }
+            }

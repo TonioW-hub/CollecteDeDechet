@@ -21,7 +21,6 @@ public class Interface {
 
         panelPrincipal.setBackground(Color.WHITE);
 
-        System.out.println("0");
         grapheVille.definirCoordGraphe();
 
         int i = 0;

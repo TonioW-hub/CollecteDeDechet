@@ -4,29 +4,28 @@ import javax.swing.*;
 import java.awt.*;
 
 public class Cercle extends JPanel {
-    private int x, y, largeur, hauteur;
-    String nomSommet;
+    private String nomSommet;
 
     public Cercle(int x, int y, int largeur, int hauteur, String nomSommet){
-        this.x = x;
-        this.y = y;
-        this.largeur = largeur;
-        this.hauteur = hauteur;
         this.nomSommet = nomSommet;
 
-        setBounds(x, y, largeur*2, hauteur*2);
+        // Positionner le composant
+        setBounds(x, y, largeur, hauteur);
         setOpaque(false);
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.drawOval(x, y, largeur, hauteur);
+
+        // Dessiner RELATIVEMENT au composant (0,0)
+        g.drawOval(0, 0, getWidth(), getHeight());
 
         FontMetrics fm = g.getFontMetrics();
         int texteLargeur = fm.stringWidth(nomSommet);
 
         g.setColor(Color.BLACK);
-        g.drawString(nomSommet, x + largeur/2 - texteLargeur/2, y + hauteur/2);
+        // Positionner le texte relativement au composant
+        g.drawString(nomSommet, getWidth()/2 - texteLargeur/2, getHeight()/2);
     }
 }
