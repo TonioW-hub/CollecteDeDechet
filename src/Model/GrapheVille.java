@@ -13,45 +13,30 @@ public class GrapheVille {
              BufferedReader br = new BufferedReader(lecteurFichier)) {
 
             String ligne;
+            int i = 0;
             while((ligne = br.readLine()) != null){
                 String[] tab = ligne.split(";");
-                int numeroMaison = Integer.parseInt(tab[0]);
+
+                int numeroMaison = Integer.parseInt(tab[2]);
+
+                boolean bis;
+                if (tab[3].equals("bis")){
+                    bis = true;
+                } else {
+                    bis = false;
+                }
 
                 if(!listeHabitations.containsKey(numeroMaison)) {
                     Habitation h = new Habitation();
+                    h.bis = bis;
                     h.numeroMaison = numeroMaison;
-                    h.nomDeLaRue = tab[1];
-                    listeHabitations.put(numeroMaison, h);
-                }
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // Deuxième passe : ajouter les voisins
-        try (FileReader lecteurFichier = new FileReader(".\\src\\" + nomFichier);
-             BufferedReader br = new BufferedReader(lecteurFichier)) {
-
-            String ligne;
-            while((ligne = br.readLine()) != null){
-                String[] tab = ligne.split(";");
-                Habitation h = listeHabitations.get(Integer.parseInt(tab[0]));
-
-                for(int i = 2; i < tab.length; i++){
-                    Arrete ar = new Arrete();
-                    ar.depart = tab[1];
-                    ar.arrivee = tab[i];
-                    h.listeVoisins.add(ar);
-
-                    String numeroStr = tab[i].split(" ")[0];
-                    int numeroVoisin = Integer.parseInt(numeroStr);
-
-                    // Récupérer le voisin depuis listeHabitations
-                    Habitation hVoisin = listeHabitations.get(numeroVoisin);
-                    if(hVoisin != null) {
-                        h.listeVoisinsHabitation.add(hVoisin);
-                    }
+                    h.nomDeLaRue = tab[4];
+                    h.x = Float.parseFloat(tab[10]);
+                    h.y = Float.parseFloat(tab[11]);
+                    h.lon = Float.parseFloat(tab[12]);
+                    h.lat = Float.parseFloat(tab[13]);
+                    listeHabitations.put(i, h);
+                    i++;
                 }
             }
 
@@ -69,22 +54,6 @@ public class GrapheVille {
                 System.out.println("Voisin : " + a.arrivee);
             }
         }
-    }
-
-    public void definirCoordGraphe() {
-        definirRue();
-
-        int j = 0;
-        for(Rue r : listeRues.values()){
-            int i = 0;
-            for(Habitation h : r.listeHabitation){
-                h.coordX = 10 + i * 110 ;
-                h.coordY = 10 + j * 110;
-                i++;
-            }
-            j++;
-        }
-
     }
 
     public void definirRue(){

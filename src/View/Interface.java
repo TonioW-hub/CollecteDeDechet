@@ -21,13 +21,13 @@ public class Interface {
 
         panelPrincipal.setBackground(Color.WHITE);
 
-        grapheVille.definirCoordGraphe();
+        Habitation initiale = listeHabitations.get(0);
 
         int i = 0;
         for(Habitation h : listeHabitations.values()){
             System.out.println(i);
             i++;
-            panelPrincipal.add(new Cercle(h.coordX, h.coordY, 100, 100, h.nomDeLaRue));
+            panelPrincipal.add(new Cercle(i * 100, i * 100, 80, 80, h.nomDeLaRue));
         }
 
         JScrollPane scrollPane = new JScrollPane(panelPrincipal);

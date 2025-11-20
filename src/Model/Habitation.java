@@ -3,11 +3,12 @@ package Model;
 import java.util.ArrayList;
 
 public class Habitation {
-    public int numeroMaison, coordX, coordY;
+    public float lon, lat, x, y;
+    int numeroMaison;
+    boolean bis = false;//si pas bis false et si bis true
     public String nomDeLaRue;
     ArrayList<Arrete> listeVoisins = new ArrayList<>();
     ArrayList<Habitation> listeVoisinsHabitation = new ArrayList<>();
-    boolean sensRue = false; //false horizontale / true verticale
 
     public Habitation() {}
     public Habitation(String nomDeLaRue, int numeroMaison) {
