@@ -27,13 +27,14 @@ public class Interface {
         };
 
         panelPrincipal.setLayout(null);
-        panelPrincipal.setPreferredSize(new Dimension(4000, 4000));
+        panelPrincipal.setPreferredSize(new Dimension(8000, 8000)); // Changé à 8000x8000
         panelPrincipal.setBackground(Color.WHITE);
 
         Habitation initiale = listeHabitations.get(0);
 
         for (Habitation h : listeHabitations.values()) {
-            panelPrincipal.add(new Cercle((int) (h.x - initiale.x) + 2000, (int) (h.y - initiale.y) + 2000, 10, 10, h.numeroMaison + h.nomDeLaRue));
+            // Ajusté pour centrer dans 8000x8000 (4000 au lieu de 2000)
+            panelPrincipal.add(new Cercle((int) (h.x - initiale.x) + 4000, (int) (h.y - initiale.y) + 4000, 10, 10, h.numeroMaison + h.nomDeLaRue));
             System.out.println("x : " + (h.x - initiale.x) + " y : " + (h.y - initiale.y));
         }
 
@@ -56,13 +57,15 @@ public class Interface {
 
         // Parcourir toutes les habitations et leurs voisins
         for (Habitation h : listeHabitations.values()) {
-            int x1 = (int) (h.x - initiale.x) + 2000 + 5; // +5 pour centrer (demi-taille du cercle)
-            int y1 = (int) (h.y - initiale.y) + 2000 + 5;
+            // Ajusté pour 8000x8000 (4000 au lieu de 2000)
+            int x1 = (int) (h.x - initiale.x) + 4000 + 5; // +5 pour centrer (demi-taille du cercle)
+            int y1 = (int) (h.y - initiale.y) + 4000 + 5;
 
             for (Arrete arrete : h.listeVoisins) {
                 Habitation voisin = arrete.arrivee;
-                int x2 = (int) (voisin.x - initiale.x) + 2000 + 5;
-                int y2 = (int) (voisin.y - initiale.y) + 2000 + 5;
+                // Ajusté pour 8000x8000 (4000 au lieu de 2000)
+                int x2 = (int) (voisin.x - initiale.x) + 4000 + 5;
+                int y2 = (int) (voisin.y - initiale.y) + 4000 + 5;
 
                 // Choisir la couleur selon le type de voisin
                 if (h.nomDeLaRue.equals(voisin.nomDeLaRue)) {
