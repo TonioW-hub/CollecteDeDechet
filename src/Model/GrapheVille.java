@@ -88,7 +88,7 @@ public class GrapheVille {
         for(Habitation h : listeHabitations.values()){
             System.out.println("Habitation : " + h.numeroMaison + " " + h.nomDeLaRue);
             for(Arrete a : h.listeVoisins){
-                System.out.println("Voisin : " + a.arrivee.numeroMaison + " " + a.depart.nomDeLaRue);
+                System.out.println("Voisin : " + a.arrivee.numeroMaison + " " + a.arrivee.nomDeLaRue);
             }
             System.out.println("--------------------------------" + i);
             i++;
@@ -189,7 +189,6 @@ public class GrapheVille {
                     h.listeVoisinsHabitations.add(voisin);
                 } else {
                     break; // Plus de voisins disponibles
-
                 }
             }
         }

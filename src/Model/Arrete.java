@@ -1,8 +1,8 @@
 package Model;
 
 public class Arrete {
-    Habitation depart;
-    Habitation arrivee;
+    public Habitation depart;
+    public Habitation arrivee;
     int distance;
 
     public Arrete(){}
