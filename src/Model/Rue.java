@@ -1,9 +1,9 @@
 package Model;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Rue {
-    ArrayList<Habitation> listeHabitation = new ArrayList<>();
+    HashMap<Float, Habitation> listeHabitation = new HashMap<>();
     String nomRue;
     boolean sensRue;
 }

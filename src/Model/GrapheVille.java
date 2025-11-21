@@ -44,16 +44,24 @@ public class GrapheVille {
 
             String ligne;
             int i = 0;
+
             while((ligne = br.readLine()) != null){
                 String[] tab = ligne.split(";");
 
-                int numeroMaison = Integer.parseInt(tab[2]);
-                boolean bis;
-                bis = tab[3].equals("bis");
+                float numeroMaison = Float.parseFloat(tab[2]);
+
+
+                boolean bis = false;
+                if(tab[3] != null && !tab[3].trim().isEmpty()) {
+                    bis = tab[3].trim().equalsIgnoreCase("bis");
+                }
 
                 if(tab[7].equals(ville)) {
                     Habitation h = new Habitation();
                     h.bis = bis;
+                    if(h.bis){
+                        numeroMaison += 0.5;
+                    }
                     h.numeroMaison = numeroMaison;
                     h.nomDeLaRue = tab[4];
                     h.x = Float.parseFloat(tab[10]);
@@ -69,15 +77,18 @@ public class GrapheVille {
             e.printStackTrace();
         }
 
+        definirRue();
+        trouverVoisinAvecRue();
+        trouverVoisinAvecDistance();
         return listeHabitations;
     }
 
     public void afficherHabitations(){
         int i = 0;
         for(Habitation h : listeHabitations.values()){
-            System.out.println("Habitation : " + h.nomDeLaRue);
+            System.out.println("Habitation : " + h.numeroMaison + " " + h.nomDeLaRue);
             for(Arrete a : h.listeVoisins){
-                System.out.println("Voisin : " + a.arrivee);
+                System.out.println("Voisin : " + a.arrivee.numeroMaison + " " + a.depart.nomDeLaRue);
             }
             System.out.println("--------------------------------" + i);
             i++;
@@ -86,23 +97,101 @@ public class GrapheVille {
 
     public void definirRue(){
         for(Habitation h : listeHabitations.values()){
-            String[] tab = h.nomDeLaRue.split(",");
 
-            if(!listeRues.containsKey(tab[1])){
-                Rue r = new Rue();
-                r.nomRue = tab[1];
-                listeRues.put(tab[1], r);
-                r.listeHabitation.add(h);
-            } else {
-                Rue r = listeRues.get(tab[1]);
-                r.listeHabitation.add(h);
+
+           if(!listeRues.containsKey(h.nomDeLaRue)){
+               Rue r = new Rue();
+               float num = h.numeroMaison;
+               r.listeHabitation.put(num ,h);
+               r.nomRue = h.nomDeLaRue;
+               listeRues.put(h.nomDeLaRue, r);
+           } else {
+               float num = h.numeroMaison;
+               listeRues.get(h.nomDeLaRue).listeHabitation.put(num, h);
+           }
+        }
+    }
+
+    public void afficherRue(){
+        for(Rue r : listeRues.values()){
+           System.out.println("Rue : " + r.nomRue);
+            for(Map.Entry<Float, Habitation> entry : r.listeHabitation.entrySet()){
+                float numeroCalcule = entry.getKey();
+                Habitation h = entry.getValue();
+                System.out.println("Habitation : " + numeroCalcule);
+            }
+           System.out.println("--------------------------------");
+        }
+    }
+
+    //Deux méthodes pour trouver les voisins d'une habitation. La première avec la rue et la deuxième avec la distance
+    public void trouverVoisinAvecRue(){
+        for(Rue r : listeRues.values()){
+
+            // Récupérer tous les numéros de la rue et les trier
+            List<Float> numerosTries = new ArrayList<>(r.listeHabitation.keySet());
+            Collections.sort(numerosTries);
+
+            // Parcourir par index pour trouver précédent/suivant
+            for(int i = 0; i < numerosTries.size(); i++){
+                float numeroActuel = numerosTries.get(i);
+                Habitation habitationActuelle = r.listeHabitation.get(numeroActuel);
+
+                // Trouver la précédente
+                Habitation precedente = null;
+                if(i > 0) {
+                    float numeroPrecedent = numerosTries.get(i - 1);
+                    precedente = r.listeHabitation.get(numeroPrecedent);
+                }
+
+                // Trouver la suivante
+                Habitation suivante = null;
+                if(i < numerosTries.size() - 1) {
+                    float numeroSuivant = numerosTries.get(i + 1);
+                    suivante = r.listeHabitation.get(numeroSuivant);
+                }
+
+                // Créer les arrêtes
+                if(precedente != null){
+                    Arrete a = new Arrete(habitationActuelle, precedente);
+                    habitationActuelle.listeVoisins.add(a);
+                    habitationActuelle.listeVoisinsHabitations.add(precedente);
+                }
+
+                if(suivante != null){
+                    Arrete a = new Arrete(habitationActuelle, suivante);
+                    habitationActuelle.listeVoisins.add(a);
+                    habitationActuelle.listeVoisinsHabitations.add(suivante);
+                }
             }
         }
     }
 
-    public void trouverVoisin(){
+    public void trouverVoisinAvecDistance(){
         for(Habitation h : listeHabitations.values()){
 
+            while(h.listeVoisins.size() < 2){
+
+                Habitation voisin = null;
+                int distanceMin = Integer.MAX_VALUE;
+
+                for(Habitation hdistance : listeHabitations.values()){
+                    if(!hdistance.nomDeLaRue.equals(h.nomDeLaRue) && !h.listeVoisinsHabitations.contains(hdistance)){
+                        int distance = (int) Math.round(Math.sqrt(Math.pow(h.x - hdistance.x, 2) + Math.pow(h.y - hdistance.y, 2)));
+                        if(distance < distanceMin){
+                            distanceMin = distance;
+                            voisin = hdistance;
+                        }
+                    }
+                }
+                if(voisin != null){
+                    h.listeVoisins.add(new Arrete(h, voisin));
+                    h.listeVoisinsHabitations.add(voisin);
+                } else {
+                    break; // Plus de voisins disponibles
+
+                }
+            }
         }
     }
 }
