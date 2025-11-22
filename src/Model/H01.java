@@ -1,17 +1,27 @@
 package Model;
 
+import View.Interface;
+
 import java.util.*;
 
 public class H01 {
-    HashMap<Integer, Habitation> listeHabitations;
+    HashMap<String, Habitation> listeHabitations;
     HashMap<String, Rue> listeRues;
 
-    public H01(HashMap<Integer, Habitation> listeHabitations, HashMap<String, Rue> listeRues) {
+    public H01(HashMap<String, Habitation> listeHabitations, HashMap<String, Rue> listeRues) {
         this.listeHabitations = listeHabitations;
         this.listeRues = listeRues;
     }
 
-    public ArrayList<Habitation> bfs1(Habitation depart, Habitation arrivee) {
+    public ArrayList<Habitation> bfs1(Habitation depart, Habitation arrivee, Interface interfaceVille) {
+
+
+        if (depart == null || arrivee == null) {
+            System.out.println("Depart ou arrivee est null");
+            return null;
+        }
+
+
         Queue<Parcours> fileAttente = new LinkedList<>();
         HashSet<Habitation> listeVisitees = new HashSet<>();
 
@@ -24,6 +34,11 @@ public class H01 {
         while(!fileAttente.isEmpty()) {
             Parcours parcours = fileAttente.poll();
             Habitation habitationActuelle = parcours.listeHabitations.get(parcours.listeHabitations.size() - 1);
+
+            if (habitationActuelle == null) {
+                System.out.println("ERREUR: habitationActuelle est null");
+                continue;
+            }
 
             if(habitationActuelle.equals(arrivee)) {
                 System.out.println("Chemin trouvé avec " + parcours.listeHabitations.size() + " étapes");
@@ -40,6 +55,17 @@ public class H01 {
 
                     nouveauParcours.listeHabitations = new ArrayList<>(parcours.listeHabitations);
                     nouveauParcours.listeHabitations.add(voisin);
+
+                    HashSet<Arrete> arreteParcours = new HashSet<>();
+                    for(Habitation hTemporaire : nouveauParcours.listeHabitations) {
+                        for(Arrete aTemporaire : hTemporaire.listeVoisins) {
+                            aTemporaire.parcourue = true;
+                            arreteParcours.add(aTemporaire);
+                        }
+                    }
+                    interfaceVille.repaintOnly();
+                    try { Thread.sleep(10); } catch (InterruptedException e) {}
+                    for(Arrete a : arreteParcours) a.parcourue = false;
 
                     fileAttente.add(nouveauParcours);
                     listeVisitees.add(voisin);

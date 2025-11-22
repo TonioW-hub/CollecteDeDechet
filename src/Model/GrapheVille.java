@@ -4,7 +4,7 @@ import java.util.*;
 import java.io.*;
 
 public class GrapheVille {
-    public HashMap<Integer, Habitation> listeHabitations = new HashMap<>();
+    public HashMap<String, Habitation> listeHabitations = new HashMap<>();
     public HashMap<String, Rue> listeRues = new HashMap<>();
 
     int distanceMax = 20; //Peut être amener à changer en fonction de ville/campage/
@@ -37,7 +37,7 @@ public class GrapheVille {
         return ville;
     }
 
-    public HashMap<Integer, Habitation> extraireHabitations(String nomFichier){
+    public HashMap<String, Habitation> extraireHabitations(String nomFichier){
         // Première passe : créer toutes les habitations
         try (FileReader lecteurFichier = new FileReader(".\\src\\" + nomFichier);
              BufferedReader br = new BufferedReader(lecteurFichier)) {
@@ -58,11 +58,19 @@ public class GrapheVille {
                     bis = tab[3].trim().equalsIgnoreCase("bis");
                 }
 
+                boolean ter = false;
+                if(tab[3] != null && !tab[3].trim().isEmpty()) {
+                    ter = tab[3].trim().equalsIgnoreCase("ter");
+                }
+
                 if(tab[7].equals(ville)) {
                     Habitation h = new Habitation();
                     h.bis = bis;
                     if(h.bis){
                         numeroMaison += 0.5;
+                    }
+                    if(ter){
+                        numeroMaison += 0.75;
                     }
                     h.numeroMaison = numeroMaison;
                     h.nomDeLaRue = tab[4];
@@ -70,7 +78,7 @@ public class GrapheVille {
                     h.y = Float.parseFloat(tab[11]);
                     h.lon = Float.parseFloat(tab[12]);
                     h.lat = Float.parseFloat(tab[13]);
-                    listeHabitations.put(i, h);
+                    listeHabitations.put(h.numeroMaison + h.nomDeLaRue, h);
                     i++;
                 }
             }
@@ -88,11 +96,7 @@ public class GrapheVille {
     public void afficherHabitations(){
         int i = 0;
         for(Habitation h : listeHabitations.values()){
-            System.out.println("Habitation : " + h.numeroMaison + " " + h.nomDeLaRue);
-            for(Arrete a : h.listeVoisins){
-                System.out.println("Voisin : " + a.arrivee.numeroMaison + " " + a.arrivee.nomDeLaRue);
-            }
-            System.out.println("--------------------------------" + i);
+            System.out.println("Habitation : " + h.numeroMaison + h.nomDeLaRue);
             i++;
         }
     }

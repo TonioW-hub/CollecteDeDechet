@@ -10,32 +10,41 @@ import java.util.HashMap;
 
 public class Interface {
     private JFrame fenetre = new JFrame("Collecteur de Déchets");
+    private JScrollPane scrollPane;
+    private JPanel panelPrincipal;
+    int largeurPanel, hauteurPanel , marge, minX , minY;
 
-    public void lancerFenetre(GrapheVille grapheVille, HashMap<Integer, Habitation> listeHabitations) {
+    public void lancerFenetre() {
         fenetre.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         fenetre.setSize(800, 600);
         fenetre.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        fenetre.setVisible(true);
+    }
+
+    public void afficherGraphe(HashMap<String, Habitation> listeHabitations){
+        if (fenetre.getContentPane().getComponentCount() > 0) {
+            fenetre.getContentPane().removeAll();
+        }
 
         // CALCUL DYNAMIQUE de la taille nécessaire
         int[] dimensions = calculerDimensions(listeHabitations);
-        int largeurPanel = dimensions[0];
-        int hauteurPanel = dimensions[1];
-        int marge = dimensions[2];
-        int minX = dimensions[3];
-        int minY = dimensions[4];
+        this.largeurPanel = dimensions[0];
+        this.hauteurPanel = dimensions[1];
+        marge = dimensions[2];
+        minX = dimensions[3];
+        minY = dimensions[4];
 
-        // Utiliser un JPanel personnalisé pour dessiner les arrêtes
-        JPanel panelPrincipal = new JPanel() {
+        panelPrincipal = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                // Dessiner les arrêtes entre les voisins
-                dessinerArretes(g, listeHabitations, marge, minX, minY);
+                dessinerArretesBFS(g, listeHabitations, marge, minX, minY);
             }
         };
 
+
         panelPrincipal.setLayout(null);
-        panelPrincipal.setPreferredSize(new Dimension(largeurPanel, hauteurPanel));
+        panelPrincipal.setPreferredSize(new Dimension(this.largeurPanel, this.hauteurPanel));
         panelPrincipal.setBackground(Color.WHITE);
 
         // Positionner les cercles avec ajustement par rapport au minimum
@@ -45,15 +54,17 @@ public class Interface {
             panelPrincipal.add(new Cercle(x, y, 10, 10, h.numeroMaison + h.nomDeLaRue));
         }
 
-        JScrollPane scrollPane = new JScrollPane(panelPrincipal);
+        scrollPane = new JScrollPane(panelPrincipal);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
         fenetre.add(scrollPane);
-        fenetre.setVisible(true);
+        fenetre.revalidate();
+        fenetre.repaint();
     }
 
-    private int[] calculerDimensions(HashMap<Integer, Habitation> listeHabitations) {
+
+    private int[] calculerDimensions(HashMap<String, Habitation> listeHabitations) {
         if (listeHabitations == null || listeHabitations.isEmpty()) {
             return new int[]{1000, 1000, 100, 0, 0};
         }
@@ -71,7 +82,6 @@ public class Interface {
             if (h.y > maxY) maxY = h.y;
         }
 
-        // Calculer la taille nécessaire avec une marge
         int marge = 100;
         int largeur = (int) (maxX - minX) + (2 * marge);
         int hauteur = (int) (maxY - minY) + (2 * marge);
@@ -87,7 +97,10 @@ public class Interface {
         return new int[]{largeur, hauteur, marge, (int)minX, (int)minY};
     }
 
-    private void dessinerArretes(Graphics g, HashMap<Integer, Habitation> listeHabitations, int marge, int minX, int minY) {
+    private void dessinerArretesBFS(Graphics g, HashMap<String, Habitation> listeHabitations, int marge, int minX, int minY) {
+
+
+
         if (listeHabitations == null || listeHabitations.isEmpty()) return;
 
         Graphics2D g2d = (Graphics2D) g;
@@ -102,12 +115,18 @@ public class Interface {
                 int x2 = (int) (voisin.x - minX) + marge + 5;
                 int y2 = (int) (voisin.y - minY) + marge + 5;
 
-                if (h.nomDeLaRue.equals(voisin.nomDeLaRue)) {
-                    g2d.setColor(Color.BLUE);
+                if(arrete.parcourue){
+                    //on met en vert
+                    g2d.setColor(Color.GREEN);
                     g2d.setStroke(new BasicStroke(1.5f));
                 } else {
-                    g2d.setColor(Color.RED);
-                    g2d.setStroke(new BasicStroke(1.0f));
+                    if (h.nomDeLaRue.equals(voisin.nomDeLaRue)) {
+                        g2d.setColor(Color.BLUE);
+                        g2d.setStroke(new BasicStroke(1.5f));
+                    } else {
+                        g2d.setColor(Color.RED);
+                        g2d.setStroke(new BasicStroke(1.0f));
+                    }
                 }
 
                 g2d.drawLine(x1, y1, x2, y2);
@@ -115,7 +134,10 @@ public class Interface {
         }
     }
 
-    public void affichageBFS(){
-
+    public void repaintOnly() {
+        if (scrollPane != null) {
+            scrollPane.repaint();
+        }
     }
+
 }
