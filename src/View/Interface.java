@@ -118,7 +118,7 @@ public class Interface {
                 if(arrete.parcourue){
                     //on met en vert
                     g2d.setColor(Color.GREEN);
-                    g2d.setStroke(new BasicStroke(1.5f));
+                    g2d.setStroke(new BasicStroke(3.0f));
                 } else {
                     if (h.nomDeLaRue.equals(voisin.nomDeLaRue)) {
                         g2d.setColor(Color.BLUE);

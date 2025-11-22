@@ -134,30 +134,28 @@ public class GrapheVille {
     public void trouverVoisinAvecRue(){
         for(Rue r : listeRues.values()){
 
-            // Récupérer tous les numéros de la rue et les trier
             List<Float> numerosTries = new ArrayList<>(r.listeHabitation.keySet());
             Collections.sort(numerosTries);
 
-            // Parcourir par index pour trouver précédent/suivant
             for(int i = 0; i < numerosTries.size(); i++){
                 float numeroActuel = numerosTries.get(i);
                 Habitation habitationActuelle = r.listeHabitation.get(numeroActuel);
 
-                // Trouver la précédente
+
                 Habitation precedente = null;
                 if(i > 0) {
                     float numeroPrecedent = numerosTries.get(i - 1);
                     precedente = r.listeHabitation.get(numeroPrecedent);
                 }
 
-                // Trouver la suivante
+
                 Habitation suivante = null;
                 if(i < numerosTries.size() - 1) {
                     float numeroSuivant = numerosTries.get(i + 1);
                     suivante = r.listeHabitation.get(numeroSuivant);
                 }
 
-                // Créer les arrêtes
+
                 if(precedente != null){
                     Arrete a = new Arrete(habitationActuelle, precedente);
                     habitationActuelle.listeVoisins.add(a);
@@ -184,7 +182,7 @@ public class GrapheVille {
                 for(Habitation hdistance : listeHabitations.values()){
                     if(!hdistance.nomDeLaRue.equals(h.nomDeLaRue) && !h.listeVoisinsHabitations.contains(hdistance)){
                         int distance = (int) Math.round(Math.sqrt(Math.pow(h.x - hdistance.x, 2) + Math.pow(h.y - hdistance.y, 2)));
-                        if((distance < distanceMin && distance <= distanceMax) || (h.listeVoisins.isEmpty() && distance < distanceMin)){
+                        if((distance < distanceMin && distance <= distanceMax) || (h.listeVoisins.size() < 2 && distance < distanceMin)){
                             distanceMin = distance;
                             voisin = hdistance;
                         }

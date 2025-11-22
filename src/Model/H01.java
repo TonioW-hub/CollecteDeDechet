@@ -78,6 +78,96 @@ public class H01 {
         return null;
     }
 
+    public ArrayList<Habitation> bfs10(Habitation depart, ArrayList<Habitation> habitationsArrivee, Interface interfaceVille) {
+
+        if (depart == null || habitationsArrivee == null) {
+            System.out.println("Depart ou arrivee est null");
+        }
+
+        Queue<Parcours> fileAttente = new LinkedList<>();
+        HashSet<Habitation> listeVisitees = new HashSet<>();
+        ArrayList<Habitation> parcoursFinal = new ArrayList<>();
+
+        Parcours parcoursInitiale = new Parcours();
+        parcoursInitiale.id = "0";
+        parcoursInitiale.listeHabitations.add(depart);
+        fileAttente.add(parcoursInitiale);
+        listeVisitees.add(depart);
+
+        while(!fileAttente.isEmpty()) {
+            Parcours parcours = fileAttente.poll();
+            Habitation habitationActuelle = parcours.listeHabitations.get(parcours.listeHabitations.size() - 1);
+
+            if (habitationActuelle == null) {
+                System.out.println("ERREUR: habitationActuelle est null");
+                continue;
+            }
+
+            if(habitationsArrivee.contains(habitationActuelle)) {
+
+                if(parcoursFinal.isEmpty()){
+                    parcoursFinal.addAll(parcours.listeHabitations);
+                } else {
+                    parcoursFinal.addAll(parcours.listeHabitations.subList(1, parcours.listeHabitations.size()));
+                }
+
+                habitationsArrivee.remove(habitationActuelle);
+
+                if(habitationsArrivee.isEmpty()){
+                    System.out.println("On est good");
+                    return parcoursFinal;
+                }
+
+                fileAttente.clear();
+                listeVisitees.clear();
+
+                Parcours nouveauParcours = new Parcours();
+                nouveauParcours.listeHabitations.add(habitationActuelle);
+                fileAttente.add(nouveauParcours);
+                listeVisitees.add(habitationActuelle);
+
+                continue;
+            }
+
+            int i = 0;
+            for(Arrete arrete : habitationActuelle.listeVoisins) {
+                Habitation voisin = arrete.arrivee;
+
+                if(!listeVisitees.contains(voisin)) {
+                    Parcours nouveauParcours = new Parcours();
+                    nouveauParcours.id = parcours.id + "." + i;
+
+                    nouveauParcours.listeHabitations = new ArrayList<>(parcours.listeHabitations);
+                    nouveauParcours.listeHabitations.add(voisin);
+
+                    HashSet<Arrete> arreteParcours = new HashSet<>();
+                    for(Habitation hTemporaire : nouveauParcours.listeHabitations) {
+                        for(Arrete aTemporaire : hTemporaire.listeVoisins) {
+                            aTemporaire.parcourue = true;
+                            arreteParcours.add(aTemporaire);
+                        }
+                    }
+                    for(Habitation hTemporaire : parcoursFinal) {
+                        for(Arrete aTemporaire : hTemporaire.listeVoisins) {
+                            aTemporaire.parcourue = true;
+                            arreteParcours.add(aTemporaire);
+                        }
+                    }
+                    interfaceVille.repaintOnly();
+                    try { Thread.sleep(10); } catch (InterruptedException e) {}
+                    for(Arrete a : arreteParcours) a.parcourue = false;
+
+                    fileAttente.add(nouveauParcours);
+                    listeVisitees.add(voisin);
+                    i++;
+                }
+            }
+        }
+
+        System.out.println("Aucun chemin trouvé après " + listeVisitees.size() + " maisons explorées");
+        return null;
+    }
+
     public void testerConnectivite(Habitation depart, Habitation arrivee) {
         System.out.println("=== TEST DE CONNECTIVITÉ ===");
         System.out.println("Départ: " + depart.nomDeLaRue + " | Arrivée: " + arrivee.nomDeLaRue);
