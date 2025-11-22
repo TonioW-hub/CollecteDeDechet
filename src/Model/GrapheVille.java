@@ -4,8 +4,10 @@ import java.util.*;
 import java.io.*;
 
 public class GrapheVille {
-    HashMap<Integer, Habitation> listeHabitations = new HashMap<>();
-    HashMap<String, Rue> listeRues = new HashMap<>();
+    public HashMap<Integer, Habitation> listeHabitations = new HashMap<>();
+    public HashMap<String, Rue> listeRues = new HashMap<>();
+
+    int distanceMax = 20; //Peut être amener à changer en fonction de ville/campage/
 
     public String choixVille(String nomFichier) throws IOException {
         HashSet<String> villes = new HashSet<>();
@@ -170,7 +172,7 @@ public class GrapheVille {
     public void trouverVoisinAvecDistance(){
         for(Habitation h : listeHabitations.values()){
 
-            while(h.listeVoisins.size() < 2){
+            while(h.listeVoisins.size() < 3){
 
                 Habitation voisin = null;
                 int distanceMin = Integer.MAX_VALUE;
@@ -178,7 +180,7 @@ public class GrapheVille {
                 for(Habitation hdistance : listeHabitations.values()){
                     if(!hdistance.nomDeLaRue.equals(h.nomDeLaRue) && !h.listeVoisinsHabitations.contains(hdistance)){
                         int distance = (int) Math.round(Math.sqrt(Math.pow(h.x - hdistance.x, 2) + Math.pow(h.y - hdistance.y, 2)));
-                        if(distance < distanceMin){
+                        if((distance < distanceMin && distance <= distanceMax) || (h.listeVoisins.isEmpty() && distance < distanceMin)){
                             distanceMin = distance;
                             voisin = hdistance;
                         }
@@ -188,7 +190,7 @@ public class GrapheVille {
                     h.listeVoisins.add(new Arrete(h, voisin));
                     h.listeVoisinsHabitations.add(voisin);
                 } else {
-                    break; // Plus de voisins disponibles
+                    break;
                 }
             }
         }
