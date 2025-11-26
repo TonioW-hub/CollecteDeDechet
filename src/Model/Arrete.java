@@ -11,4 +11,8 @@ public class Arrete {
         this.depart = depart;
         this.arrivee = arrivee;
     }
+
+    public void calculeDistance(){
+        this.distance = (int) Math.round(Math.sqrt(Math.pow(depart.x - arrivee.x, 2) + Math.pow(depart.y - arrivee.y, 2)));
+    }
 }

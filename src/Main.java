@@ -1,9 +1,11 @@
 import Model.*;
 import View.*;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
+import javax.swing.JFileChooser;
 
 public class Main {
     public static void main(String[] args) {
@@ -13,8 +15,26 @@ public class Main {
         Interface interfaceVille = new Interface();
 
         //TOUTE LA PARTIE LOGIQUE
+        JFileChooser choixFichier = new JFileChooser(new File("."));
+        int returnValue = choixFichier.showOpenDialog(null);
+        String choixPath = "villes.txt";
+
+        switch (returnValue) {
+            case JFileChooser.APPROVE_OPTION:
+                File files = choixFichier.getSelectedFile();
+                choixPath = files.getAbsolutePath();
+                break;
+            case JFileChooser.CANCEL_OPTION:
+                System.out.println("Opération annulée");
+                break;
+
+            case JFileChooser.ERROR_OPTION:
+                System.out.println("Erreur lors de la sélection");
+                break;
+        }
+
         GrapheVille grapheVille = new GrapheVille();
-        HashMap<String, Habitation> listeHabitations = grapheVille.extraireHabitations("villes.txt");
+        HashMap<String, Habitation> listeHabitations = grapheVille.extraireHabitations(choixPath);
 
         interfaceVille.lancerFenetre();
         interfaceVille.afficherGraphe(listeHabitations);
@@ -27,7 +47,7 @@ public class Main {
             habitationTemporaires.add(h);
         }
 
-        int nbrRandom = (int) (Math.random() * 11) + 1;
+        int nbrRandom = (int) (Math.random() * 8) + 3;
         ArrayList<Habitation> listeHabitationArrivee = new ArrayList<>();
 
         for(int i = 0; i < nbrRandom; i++) {

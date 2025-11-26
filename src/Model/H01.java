@@ -168,6 +168,14 @@ public class H01 {
         return null;
     }
 
+    public ArrayList<Habitation> dijkstra1(Habitation depart, Habitation arrivee, Interface interfaceVille) {
+        if (depart == null || arrivee == null) {
+            System.out.println("Depart ou arrivee est null");
+        }
+
+        return null;
+    }
+
     public void testerConnectivite(Habitation depart, Habitation arrivee) {
         System.out.println("=== TEST DE CONNECTIVITÉ ===");
         System.out.println("Départ: " + depart.nomDeLaRue + " | Arrivée: " + arrivee.nomDeLaRue);

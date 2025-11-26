@@ -14,7 +14,7 @@ public class GrapheVille {
         String ligne;
         String ville;
 
-        FileReader lecteurFichier = new FileReader(".\\src\\" + nomFichier);
+        FileReader lecteurFichier = new FileReader(nomFichier);
         BufferedReader br = new BufferedReader(lecteurFichier);
 
         while((ligne = br.readLine()) != null){
@@ -39,7 +39,7 @@ public class GrapheVille {
 
     public HashMap<String, Habitation> extraireHabitations(String nomFichier){
         // Première passe : créer toutes les habitations
-        try (FileReader lecteurFichier = new FileReader(".\\src\\" + nomFichier);
+        try (FileReader lecteurFichier = new FileReader(nomFichier);
              BufferedReader br = new BufferedReader(lecteurFichier)) {
 
             String ville = choixVille(nomFichier);
@@ -158,12 +158,14 @@ public class GrapheVille {
 
                 if(precedente != null){
                     Arrete a = new Arrete(habitationActuelle, precedente);
+                    a.calculeDistance();
                     habitationActuelle.listeVoisins.add(a);
                     habitationActuelle.listeVoisinsHabitations.add(precedente);
                 }
 
                 if(suivante != null){
                     Arrete a = new Arrete(habitationActuelle, suivante);
+                    a.calculeDistance();
                     habitationActuelle.listeVoisins.add(a);
                     habitationActuelle.listeVoisinsHabitations.add(suivante);
                 }
@@ -189,7 +191,9 @@ public class GrapheVille {
                     }
                 }
                 if(voisin != null){
-                    h.listeVoisins.add(new Arrete(h, voisin));
+                    Arrete a = new Arrete(h, voisin);
+                    a.calculeDistance();
+                    h.listeVoisins.add(a);
                     h.listeVoisinsHabitations.add(voisin);
                 } else {
                     break;
