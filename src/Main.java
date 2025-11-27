@@ -62,7 +62,8 @@ public class Main {
             System.out.println(h.nomDeLaRue + " " + h.numeroMaison);
         }
 
-        ArrayList<Habitation> habitationParcours = h01.bfs10(habitationDepart, listeHabitationArrivee, interfaceVille);
+        ArrayList<Habitation> habitationParcours = h01.dijkstra10(habitationDepart, listeHabitationArrivee, interfaceVille);
+        //ArrayList<Habitation> habitationParcours = h01.bfs10(habitationDepart, listeHabitationArrivee, interfaceVille);
         //ArrayList<Habitation> habitationParcours = h01.bfs1(grapheVille.listeHabitations.get(habitationDepart), grapheVille.listeHabitations.get(habitationArrivee), interfaceVille);
         //h01.testerConnectivite(grapheVille.listeHabitations.get(0), grapheVille.listeHabitations.get(2000));
 

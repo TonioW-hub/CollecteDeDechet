@@ -172,6 +172,182 @@ public class H01 {
         if (depart == null || arrivee == null) {
             System.out.println("Depart ou arrivee est null");
         }
+        PriorityQueue<Parcours> fileAttente = new PriorityQueue<>();
+        HashMap<Habitation, Integer> listeVisitees = new HashMap<>();
+
+        Parcours parcoursInitiale = new Parcours();
+        parcoursInitiale.id = "0";
+        parcoursInitiale.distance = 0;
+        parcoursInitiale.listeHabitations.add(depart);
+        fileAttente.add(parcoursInitiale);
+        listeVisitees.put(depart, parcoursInitiale.distance);
+
+        while(!fileAttente.isEmpty()) {
+            Parcours parcours = fileAttente.poll();
+            Habitation habitationActuelle = parcours.listeHabitations.get(parcours.listeHabitations.size() - 1);
+
+            if(parcours.distance > listeVisitees.get(habitationActuelle)) continue;
+
+            if (habitationActuelle == null) {
+                System.out.println("ERREUR: habitationActuelle est null");
+                continue;
+            }
+
+            if(habitationActuelle.equals(arrivee)) {
+                System.out.println("Chemin trouvé avec " + parcours.listeHabitations.size() + " étapes");
+                return parcours.listeHabitations;
+            }
+
+            int i = 0;
+            for(Arrete arrete : habitationActuelle.listeVoisins) {
+                Habitation voisin = arrete.arrivee;
+                int nouvelleDistance = parcours.distance + arrete.distance;
+
+                if(!listeVisitees.containsKey(voisin) || nouvelleDistance < listeVisitees.get(voisin)) {
+                    listeVisitees.put(voisin, nouvelleDistance);
+
+                    Parcours nouveauParcours = new Parcours();
+                    nouveauParcours.id = parcours.id + "." + i;
+
+                    nouveauParcours.listeHabitations = new ArrayList<>(parcours.listeHabitations);
+                    nouveauParcours.listeHabitations.add(voisin);
+
+                    nouveauParcours.distance = parcours.distance + arrete.distance;
+
+                    HashSet<Arrete> arreteParcours = new HashSet<>();
+                    for(Habitation hTemporaire : nouveauParcours.listeHabitations) {
+                        for(Arrete aTemporaire : hTemporaire.listeVoisins) {
+                            aTemporaire.parcourue = true;
+                            arreteParcours.add(aTemporaire);
+                        }
+                    }
+                    interfaceVille.repaintOnly();
+                    try { Thread.sleep(10); } catch (InterruptedException e) {}
+                    for(Arrete a : arreteParcours) a.parcourue = false;
+
+                    fileAttente.add(nouveauParcours);
+                    i++;
+                }
+            }
+        }
+
+        System.out.println("Aucun chemin trouvé après " + listeVisitees.size() + " maisons explorées");
+        return null;
+    }
+
+    public ArrayList<Habitation> dijkstra10(Habitation depart, ArrayList<Habitation> habitationsArrivee, Interface interfaceVille) {
+
+        if (depart == null || habitationsArrivee == null) {
+            System.out.println("Depart ou arrivee est null");
+        }
+
+        PriorityQueue<Parcours> fileAttente = new PriorityQueue<>();
+        HashMap<Habitation, Integer> listeVisitees = new HashMap<>();
+        ArrayList<Habitation> parcoursFinal = new ArrayList<>();
+
+        Parcours parcoursInitiale = new Parcours();
+        parcoursInitiale.id = "0";
+        parcoursInitiale.distance = 0;
+        parcoursInitiale.listeHabitations.add(depart);
+        fileAttente.add(parcoursInitiale);
+        listeVisitees.put(depart, parcoursInitiale.distance);
+
+        while(!fileAttente.isEmpty()) {
+            Parcours parcours = fileAttente.poll();
+            Habitation habitationActuelle = parcours.listeHabitations.get(parcours.listeHabitations.size() - 1);
+
+            if(parcours.distance > listeVisitees.get(habitationActuelle)) continue;
+
+            if (habitationActuelle == null) {
+                System.out.println("ERREUR: habitationActuelle est null");
+                continue;
+            }
+
+            if(habitationsArrivee.contains(habitationActuelle)) {
+
+                if(parcoursFinal.isEmpty()){
+                    parcoursFinal.addAll(parcours.listeHabitations);
+                } else {
+                    parcoursFinal.addAll(parcours.listeHabitations.subList(1, parcours.listeHabitations.size()));
+                }
+
+                habitationsArrivee.remove(habitationActuelle);
+
+                if(habitationsArrivee.isEmpty()){
+                    System.out.println("On est good");
+                    return parcoursFinal;
+                }
+
+                fileAttente.clear();
+                listeVisitees.clear();
+
+                Parcours nouveauParcours = new Parcours();
+                nouveauParcours.listeHabitations.add(habitationActuelle);
+                nouveauParcours.distance = parcours.distance;
+                fileAttente.add(nouveauParcours);
+                listeVisitees.put(habitationActuelle, parcours.distance);
+
+                continue;
+            }
+
+            int i = 0;
+            for(Arrete arrete : habitationActuelle.listeVoisins) {
+                Habitation voisin = arrete.arrivee;
+                int nouvelleDistance = parcours.distance + arrete.distance;
+
+                if(!listeVisitees.containsKey(voisin) || nouvelleDistance < listeVisitees.get(voisin)) {
+                    listeVisitees.put(voisin, nouvelleDistance);
+
+                    Parcours nouveauParcours = new Parcours();
+                    nouveauParcours.id = parcours.id + "." + i;
+
+                    nouveauParcours.distance = parcours.distance + arrete.distance;
+
+                    nouveauParcours.listeHabitations = new ArrayList<>(parcours.listeHabitations);
+                    nouveauParcours.listeHabitations.add(voisin);
+
+                    HashSet<Arrete> arreteParcours = new HashSet<>();
+                    for(Habitation hTemporaire : nouveauParcours.listeHabitations) {
+                        for(Arrete aTemporaire : hTemporaire.listeVoisins) {
+                            aTemporaire.parcourue = true;
+                            arreteParcours.add(aTemporaire);
+                        }
+                    }
+                    for(Habitation hTemporaire : parcoursFinal) {
+                        for(Arrete aTemporaire : hTemporaire.listeVoisins) {
+                            aTemporaire.parcourue = true;
+                            arreteParcours.add(aTemporaire);
+                        }
+                    }
+                    interfaceVille.repaintOnly();
+                    try { Thread.sleep(10); } catch (InterruptedException e) {}
+                    for(Arrete a : arreteParcours) a.parcourue = false;
+
+                    fileAttente.add(nouveauParcours);
+                    i++;
+                }
+            }
+        }
+
+        System.out.println("Aucun chemin trouvé après " + listeVisitees.size() + " maisons explorées");
+        return null;
+    }
+
+    public ArrayList<Habitation> touteVille(Habitation depart, Interface interfaceVille) {
+
+        Queue<Habitation> fileAttente = new LinkedList<>();
+        HashSet<Habitation> listeVisitees = new HashSet<>();
+
+        fileAttente.add(depart);
+        listeVisitees.add(depart);
+
+        while(!fileAttente.isEmpty()) {
+            Habitation habitationActuelle = fileAttente.poll();
+
+            for(Arrete arrete : habitationActuelle.listeVoisins) {
+                Habitation voisin = arrete.arrivee;
+            }
+        }
 
         return null;
     }
