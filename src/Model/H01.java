@@ -338,18 +338,86 @@ public class H01 {
         Queue<Habitation> fileAttente = new LinkedList<>();
         HashSet<Habitation> listeVisitees = new HashSet<>();
 
+        Parcours parcours = new Parcours();
+
         fileAttente.add(depart);
         listeVisitees.add(depart);
+        parcours.listeHabitations.add(depart);
 
         while(!fileAttente.isEmpty()) {
             Habitation habitationActuelle = fileAttente.poll();
+            boolean voisinTrouve = false;
 
-            for(Arrete arrete : habitationActuelle.listeVoisins) {
+            for (Arrete arrete : habitationActuelle.listeVoisins) {
                 Habitation voisin = arrete.arrivee;
+
+                if (voisin.nomDeLaRue.equals(habitationActuelle.nomDeLaRue) && !listeVisitees.contains(voisin)) {
+                    fileAttente.add(voisin);
+                    listeVisitees.add(voisin);
+                    parcours.listeHabitations.add(voisin);
+                    visualisation(parcours, interfaceVille);
+                    voisinTrouve = true;
+                    break;
+                }
+            }
+
+            if (!voisinTrouve) {
+                for (Arrete arrete : habitationActuelle.listeVoisins) {
+                    Habitation voisin = arrete.arrivee;
+
+                    if (!listeVisitees.contains(voisin)) {
+                        fileAttente.add(voisin);
+                        listeVisitees.add(voisin);
+                        parcours.listeHabitations.add(voisin);
+                        visualisation(parcours, interfaceVille);
+                        voisinTrouve = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!voisinTrouve) {//Petit Bfs pour trouver le chemin le plus court vers l'habitation non marqué la plus proche
+
+                ArrayList<Habitation> listeVisiteBFS = new ArrayList<>();
+                Queue<Parcours> fileAttenteBFS = new LinkedList<>();
+
+                Parcours parcoursInitial = new Parcours();
+                parcoursInitial.listeHabitations.add(habitationActuelle);
+
+                fileAttenteBFS.add(parcoursInitial);
+                listeVisiteBFS.add(habitationActuelle);
+
+                while (!fileAttenteBFS.isEmpty()) {
+                    Parcours parcoursBFS = fileAttenteBFS.poll();
+                    Habitation habitationActuelleBFS = parcoursBFS.listeHabitations.get(parcoursBFS.listeHabitations.size() - 1);
+
+                    for (Arrete a : habitationActuelleBFS.listeVoisins) {
+                        Habitation voisinBfs = a.arrivee;
+
+                        if (!listeVisitees.contains(voisinBfs)) {
+                            fileAttente.add(voisinBfs);
+                            listeVisitees.add(voisinBfs);
+                            parcours.listeHabitations.add(voisinBfs);
+                            visualisation(parcours, interfaceVille);
+                            fileAttenteBFS.clear();
+                            break;
+                        }
+
+                        if (!listeVisiteBFS.contains(voisinBfs)) {
+                            Parcours nouveauParcours = new Parcours();
+
+                            nouveauParcours.listeHabitations = new ArrayList<>(parcoursBFS.listeHabitations);
+                            nouveauParcours.listeHabitations.add(voisinBfs);
+
+                            fileAttenteBFS.add(nouveauParcours);
+                            listeVisiteBFS.add(voisinBfs);
+                        }
+                    }
+                }
             }
         }
 
-        return null;
+        return parcours.listeHabitations;
     }
 
     public void testerConnectivite(Habitation depart, Habitation arrivee) {
@@ -399,5 +467,18 @@ public class H01 {
             System.out.println("Habitations totales: 2991");
             System.out.println("Habitations INACCESSIBLES: " + (2991 - composanteConnexe.size()));
         }
+    }
+
+    public void visualisation(Parcours nouveauParcours, Interface interfaceVille){
+        HashSet<Arrete> arreteParcours = new HashSet<>();
+        for(Habitation hTemporaire : nouveauParcours.listeHabitations) {
+            for(Arrete aTemporaire : hTemporaire.listeVoisins) {
+                aTemporaire.parcourue = true;
+                arreteParcours.add(aTemporaire);
+            }
+        }
+        interfaceVille.repaintOnly();
+        try { Thread.sleep(10); } catch (InterruptedException e) {}
+        for(Arrete a : arreteParcours) a.parcourue = false;
     }
 }
