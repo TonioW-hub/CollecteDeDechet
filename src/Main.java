@@ -17,7 +17,7 @@ public class Main {
         //TOUTE LA PARTIE LOGIQUE
         JFileChooser choixFichier = new JFileChooser(new File("."));
         int returnValue = choixFichier.showOpenDialog(null);
-        String choixPath = "villes.txt";
+        String choixPath = "ville.txt";
 
         switch (returnValue) {
             case JFileChooser.APPROVE_OPTION:
@@ -33,7 +33,37 @@ public class Main {
                 break;
         }
 
+        JFileChooser choixFichier2 = new JFileChooser(new File("."));
+        int returnValue2 = choixFichier.showOpenDialog(null);
+        String choixPath2 = "intersections.txt";
+
+        switch (returnValue2) {
+            case JFileChooser.APPROVE_OPTION:
+                File files = choixFichier.getSelectedFile();
+                choixPath2 = files.getAbsolutePath();
+                break;
+            case JFileChooser.CANCEL_OPTION:
+                System.out.println("Opération annulée");
+                break;
+
+            case JFileChooser.ERROR_OPTION:
+                System.out.println("Erreur lors de la sélection");
+                break;
+        }
+
+
         GrapheVille grapheVille = new GrapheVille();
+
+        System.out.println("Chargement des intersections...");
+        grapheVille.chargerIntersections(choixPath2);
+
+        grapheVille.intersections.values().stream()
+                .limit(500)
+                .forEach(inter -> {
+                    System.out.println(inter.lon + " / " + inter.lat + " → " + inter.rues);
+                });
+
+
         HashMap<String, Habitation> listeHabitations = grapheVille.extraireHabitations(choixPath);
 
         interfaceVille.lancerFenetre();
