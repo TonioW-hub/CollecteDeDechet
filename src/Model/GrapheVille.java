@@ -11,6 +11,12 @@ public class GrapheVille {
 
     int distanceMax = 20; //Peut être amener à changer en fonction de ville/campage/
 
+    private double distance(Habitation a, Habitation b) { // savoir la distance entre 2 habitations pour savoir quel habitation est sur la rue adjacente
+        double dx = a.lon - b.lon;
+        double dy = a.lat - b.lat;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
     public String choixVille(String nomFichier) throws IOException {
         HashSet<String> villes = new HashSet<>();
         String ligne;
@@ -91,7 +97,8 @@ public class GrapheVille {
 
         definirRue();
         trouverVoisinAvecRue();
-        trouverVoisinAvecDistance();
+        //trouverVoisinAvecDistance();
+        connecterViaIntersectionsBestPair();
         return listeHabitations;
     }
 
@@ -353,5 +360,164 @@ public class GrapheVille {
         return rue.trim();
     }
 
+    private String normaliserRue(String rue) {
+        // pour l’instant, on réutilise exactement la même logique
+        return nettoyerNomRue(rue);
+    }
+
+    public HashMap<String, List<Habitation>> construireIndexHabitationsParRue() {
+        HashMap<String, List<Habitation>> index = new HashMap<>();
+
+        for (Habitation h : listeHabitations.values()) {
+            String nomNorm = normaliserRue(h.nomDeLaRue);
+            index.computeIfAbsent(nomNorm, k -> new ArrayList<>())
+                    .add(h);
+        }
+
+        return index;
+    }
+
+    public void connecterHabitationsParIntersections() {
+
+        // 1) Index des habitations par rue normalisée
+        HashMap<String, List<Habitation>> habitationsParRue = construireIndexHabitationsParRue();
+
+        int nbArretesAjoutees = 0;
+
+        // 2) Parcours de toutes les intersections de la ville choisie
+        for (Intersection inter : intersections.values()) {
+
+            // Pour chaque intersection, on va trouver au plus 1 habitation par rue
+            HashMap<String, Habitation> habitationPlusProcheParRue = new HashMap<>();
+
+            for (String nomRueBrut : inter.rues) {
+                String nomNorm = normaliserRue(nomRueBrut);
+
+                List<Habitation> habs = habitationsParRue.get(nomNorm);
+                if (habs == null || habs.isEmpty()) continue;
+
+                Habitation best = null;
+                double bestD2 = Double.MAX_VALUE;
+
+                for (Habitation h : habs) {
+                    double dx = h.lon - inter.lon;
+                    double dy = h.lat - inter.lat;
+                    double d2 = dx * dx + dy * dy;
+
+                    if (d2 < bestD2) {
+                        bestD2 = d2;
+                        best = h;
+                    }
+                }
+
+                if (best != null) {
+                    habitationPlusProcheParRue.put(nomNorm, best);
+                }
+            }
+
+            // 3) Si l’intersection relie au moins 2 rues ayant des habitations,
+            // on connecte ces habitations entre elles
+            ArrayList<Habitation> habsInter =
+                    new ArrayList<>(habitationPlusProcheParRue.values());
+
+            for (int i = 0; i < habsInter.size(); i++) {
+                for (int j = i + 1; j < habsInter.size(); j++) {
+
+                    Habitation h1 = habsInter.get(i);
+                    Habitation h2 = habsInter.get(j);
+
+                    if (h1 == h2) continue;
+
+                    // éviter les doublons
+                    if (h1.listeVoisinsHabitations.contains(h2)) continue;
+
+                    // h1 -> h2
+                    Arrete a1 = new Arrete(h1, h2);
+                    a1.calculeDistance();
+                    h1.listeVoisins.add(a1);
+                    h1.listeVoisinsHabitations.add(h2);
+
+                    // h2 -> h1
+                    Arrete a2 = new Arrete(h2, h1);
+                    a2.calculeDistance();
+                    h2.listeVoisins.add(a2);
+                    h2.listeVoisinsHabitations.add(h1);
+
+                    nbArretesAjoutees += 2;
+                }
+            }
+        }
+
+        System.out.println("Connexions via intersections ajoutées : " + nbArretesAjoutees + " arêtes.");
+    }
+
+    public void connecterViaIntersectionsBestPair() {
+
+        // Prépare un map rue -> liste d'habitations pour faciliter les accès
+        HashMap<String, ArrayList<Habitation>> maisonsParRue = new HashMap<>();
+        for (Rue r : listeRues.values()) {
+            maisonsParRue.put(r.nomRue, new ArrayList<>(r.listeHabitation.values()));
+        }
+
+        int nbAretesCreees = 0;
+
+        // Pour chaque intersection
+        for (Model.Intersection.Intersection inter : intersections.values()) {
+
+            // On récupère la liste des rues de cette intersection
+            ArrayList<String> rues = new ArrayList<>(inter.rues);
+
+            // Il faut au moins 2 rues pour faire une connexion
+            if (rues.size() < 2) continue;
+
+            // Pour chaque paire de rues (r1, r2)
+            for (int i = 0; i < rues.size(); i++) {
+                String rue1 = rues.get(i);
+                ArrayList<Habitation> list1 = maisonsParRue.get(rue1);
+                if (list1 == null || list1.isEmpty()) continue;
+
+                for (int j = i + 1; j < rues.size(); j++) {
+                    String rue2 = rues.get(j);
+                    ArrayList<Habitation> list2 = maisonsParRue.get(rue2);
+                    if (list2 == null || list2.isEmpty()) continue;
+
+                    // Chercher le couple (h1, h2) qui minimise la distance entre habitations
+                    Habitation bestH1 = null;
+                    Habitation bestH2 = null;
+                    double bestDist = Double.MAX_VALUE;
+
+                    for (Habitation h1 : list1) {
+                        for (Habitation h2 : list2) {
+                            double d = distance(h1, h2);
+                            if (d < bestDist) {
+                                bestDist = d;
+                                bestH1 = h1;
+                                bestH2 = h2;
+                            }
+                        }
+                    }
+
+                    // Si on a trouvé un couple valide, on crée l'arête
+                    if (bestH1 != null && bestH2 != null &&
+                            !bestH1.listeVoisinsHabitations.contains(bestH2)) {
+
+                        Arrete a1 = new Arrete(bestH1, bestH2);
+                        a1.calculeDistance();
+                        bestH1.listeVoisins.add(a1);
+                        bestH1.listeVoisinsHabitations.add(bestH2);
+
+                        Arrete a2 = new Arrete(bestH2, bestH1);
+                        a2.calculeDistance();
+                        bestH2.listeVoisins.add(a2);
+                        bestH2.listeVoisinsHabitations.add(bestH1);
+
+                        nbAretesCreees += 2;
+                    }
+                }
+            }
+        }
+
+        System.out.println("Connexions via intersections (best pair) ajoutées : " + nbAretesCreees + " arêtes.");
+    }
 
 }

@@ -66,6 +66,19 @@ public class Main {
 
         HashMap<String, Habitation> listeHabitations = grapheVille.extraireHabitations(choixPath);
 
+        // On enrichit maintenant le graphe avec les connexions issues des intersections
+        grapheVille.connecterHabitationsParIntersections();
+
+        System.out.println("=== DEBUG : quelques habitations et leurs voisins ===");
+        grapheVille.listeHabitations.values().stream()
+                .limit(10)
+                .forEach(h -> {
+                    System.out.println(h.numeroMaison + " " + h.nomDeLaRue + " :");
+                    h.listeVoisinsHabitations.stream()
+                            .limit(5)
+                            .forEach(v -> System.out.println("   -> " + v.numeroMaison + " " + v.nomDeLaRue));
+                });
+
         interfaceVille.lancerFenetre();
         interfaceVille.afficherGraphe(listeHabitations);
 
