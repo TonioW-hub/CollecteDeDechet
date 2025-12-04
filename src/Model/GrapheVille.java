@@ -12,8 +12,8 @@ public class GrapheVille {
     int distanceMax = 20; //Peut être amener à changer en fonction de ville/campage/
 
     private double distance(Habitation a, Habitation b) { // savoir la distance entre 2 habitations pour savoir quel habitation est sur la rue adjacente
-        double dx = a.lon - b.lon;
-        double dy = a.lat - b.lat;
+        double dx = a.x - b.x;
+        double dy = a.y - b.y;
         return Math.sqrt(dx * dx + dy * dy);
     }
 
