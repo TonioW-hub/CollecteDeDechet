@@ -14,10 +14,13 @@ public class Main {
 
         Interface interfaceVille = new Interface();
 
-        //TOUTE LA PARTIE LOGIQUE
         JFileChooser choixFichier = new JFileChooser(new File("."));
         int returnValue = choixFichier.showOpenDialog(null);
         String choixPath = "ville.txt";
+
+        //Créer entrepot et le depot
+        Habitation depot = new Habitation(1, "Depot");
+        Habitation entrepot = new Habitation(1, "Entrepot");
 
         switch (returnValue) {
             case JFileChooser.APPROVE_OPTION:
@@ -79,6 +82,22 @@ public class Main {
                             .forEach(v -> System.out.println("   -> " + v.numeroMaison + " " + v.nomDeLaRue));
                 });
 
+        //On trouve le voisin de depot et entrepot
+        int xmin = 100000000, ymin = 1000000000;
+        Habitation voisinDeDepotEtEntrepot = new Habitation();
+        voisinDeDepotEtEntrepot.x = xmin;
+        voisinDeDepotEtEntrepot.y = ymin;
+        for(Habitation h : listeHabitations.values()) {
+            if(h.x < voisinDeDepotEtEntrepot.x && h.y < voisinDeDepotEtEntrepot.y) {
+                voisinDeDepotEtEntrepot = h;
+
+            }
+        }
+        depot.listeVoisinsHabitations.add(voisinDeDepotEtEntrepot);
+        entrepot.listeVoisinsHabitations.add(voisinDeDepotEtEntrepot);
+        depot.listeVoisins.add(new Arrete(depot, voisinDeDepotEtEntrepot));
+        entrepot.listeVoisins.add(new Arrete(entrepot, voisinDeDepotEtEntrepot));
+
         interfaceVille.lancerFenetre();
         interfaceVille.afficherGraphe(listeHabitations);
 
@@ -105,7 +124,7 @@ public class Main {
             System.out.println(h.nomDeLaRue + " " + h.numeroMaison);
         }
 
-        ArrayList<Habitation> habitationParcours = h01.touteVille(habitationDepart, interfaceVille);
+        ArrayList<Habitation> habitationParcours = h01.touteVille(entrepot, interfaceVille);
         //ArrayList<Habitation> habitationParcours = h01.dijkstra10(habitationDepart, listeHabitationArrivee, interfaceVille);
         //ArrayList<Habitation> habitationParcours = h01.bfs10(habitationDepart, listeHabitationArrivee, interfaceVille);
         //ArrayList<Habitation> habitationParcours = h01.bfs1(grapheVille.listeHabitations.get(habitationDepart), grapheVille.listeHabitations.get(habitationArrivee), interfaceVille);

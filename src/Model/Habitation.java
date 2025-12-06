@@ -8,6 +8,12 @@ public class Habitation {
     public String nomDeLaRue;
     public ArrayList<Arrete> listeVoisins = new ArrayList<>();
     public ArrayList<Habitation> listeVoisinsHabitations = new ArrayList<>();
+    int kruskalIndex;
 
     public Habitation() {}
+
+    public Habitation(float numeroMaison, String nomDeLaRue) {
+        this.numeroMaison = numeroMaison;
+        this.nomDeLaRue = nomDeLaRue;
+    }
 }

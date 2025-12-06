@@ -1,6 +1,6 @@
 package Model;
 
-public class Arrete {
+public class Arrete implements Comparable<Arrete>{
     public Habitation depart;
     public Habitation arrivee;
     int distance;
@@ -14,5 +14,10 @@ public class Arrete {
 
     public void calculeDistance(){
         this.distance = (int) Math.round(Math.sqrt(Math.pow(depart.x - arrivee.x, 2) + Math.pow(depart.y - arrivee.y, 2)));
+    }
+
+    @Override
+    public int compareTo(Arrete o) {
+        return this.distance - o.distance;
     }
 }
