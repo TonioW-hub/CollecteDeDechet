@@ -267,34 +267,30 @@ public class Menu extends JFrame {
         // 8. On exécute l'algorithme demandé
         switch (mode) {
             case "bfs1":
-                System.out.println("Exécution de BFS pour 1 destination...");
-                resultat = h01.bfs1(depot, habitationProche, interfaceVille);
+                Habitation habitation = genererHabitationsAleatoires1(grapheVille, 1);
+                resultat = h01.bfs1(depot, habitation, interfaceVille);
                 break;
 
             case "dijkstra1":
-                System.out.println("Exécution de Dijkstra pour 1 destination...");
-                resultat = h01.dijkstra1(depot, habitationProche, interfaceVille);
+                Habitation habitationD = genererHabitationsAleatoires1(grapheVille, 1);
+                resultat = h01.dijkstra1(depot, habitationD, interfaceVille);
                 break;
 
             case "bfs10":
-                System.out.println("Exécution de BFS pour 10 destinations...");
-                ArrayList<Habitation> destinationsBfs = genererDestinationsAleatoires(grapheVille, 10);
+                ArrayList<Habitation> destinationsBfs = genererHabitationsAleatoires(grapheVille, 10);
                 resultat = h01.bfs10(depot, destinationsBfs, interfaceVille);
                 break;
 
             case "dijkstra10":
-                System.out.println("Exécution de Dijkstra pour 10 destinations...");
-                ArrayList<Habitation> destinationsDijkstra = genererDestinationsAleatoires(grapheVille, 10);
+                ArrayList<Habitation> destinationsDijkstra = genererHabitationsAleatoires(grapheVille, 10);
                 resultat = h01.dijkstra10(depot, destinationsDijkstra, interfaceVille);
                 break;
 
             case "touteVille":
-                System.out.println("Exécution du parcours complet de la ville...");
                 resultat = h01.touteVille(entrepot, interfaceVille);
                 break;
 
             case "mst":
-                System.out.println("Exécution de l'algorithme MST...");
                 ArrayList<Truck> camions = new ArrayList<>();
                 for (int i = 0; i < 10; i++) {
                     camions.add(new Truck(1000, i));
@@ -363,20 +359,14 @@ public class Menu extends JFrame {
     }
 
     // Génère une liste d'habitations au hasard pour tester
-    private ArrayList<Habitation> genererDestinationsAleatoires(GrapheVille graphe, int nombre) {
+    private ArrayList<Habitation> genererHabitationsAleatoires(GrapheVille graphe, int nombre) {
         // On prend toutes les habitations
         ArrayList<Habitation> toutesHabitations = new ArrayList<>(graphe.listeHabitations.values());
         ArrayList<Habitation> destinations = new ArrayList<>();
 
-        // On enlève le dépôt et l'entrepôt si jamais ils sont dans la liste
+        // On enlève le dépôt et l'entrepôt si jamais ils sont dans la liste pour eviter boucle infinie
         toutesHabitations.removeIf(h -> h.nomDeLaRue.equals("Dépôt") || h.nomDeLaRue.equals("Entrepôt"));
 
-        // Si y a moins d'habitations que demandé, on ajuste
-        if (toutesHabitations.size() < nombre) {
-            nombre = toutesHabitations.size();
-        }
-
-        // On prend 'nombre' habitations au hasard
         for (int i = 0; i < nombre; i++) {
             int index = (int) (Math.random() * toutesHabitations.size());
             destinations.add(toutesHabitations.get(index));
@@ -387,17 +377,23 @@ public class Menu extends JFrame {
         return destinations;
     }
 
+    private Habitation genererHabitationsAleatoires1(GrapheVille graphe, int nombre) {
+        // On prend toutes les habitations
+        ArrayList<Habitation> toutesHabitations = new ArrayList<>(graphe.listeHabitations.values());
+        Habitation destination = null;
+
+        // On enlève le dépôt et l'entrepôt si jamais ils sont dans la liste pour eviter boucle infinie
+        toutesHabitations.removeIf(h -> h.nomDeLaRue.equals("Dépôt") || h.nomDeLaRue.equals("Entrepôt"));
+
+        int nbrandom = (int) (Math.random() * toutesHabitations.size());
+        destination = toutesHabitations.get(nbrandom);
+
+        return destination;
+    }
+
     // Pour afficher la fenêtre
     public void afficher() {
         setVisible(true);
     }
 
-    // Pour tester le menu tout seul
-    public static void main(String[] args) {
-        // SwingUtilities c'est pour être sûr que ça tourne dans le bon thread
-        SwingUtilities.invokeLater(() -> {
-            Menu menu = new Menu();
-            menu.afficher();
-        });
-    }
 }
