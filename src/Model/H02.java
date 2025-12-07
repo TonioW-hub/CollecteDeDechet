@@ -203,7 +203,7 @@ public class H02 {
         return tours;
     }
 
-    public List<Parcours> calculerTournées(Habitation depot, List<Truck> camions) {
+    public List<Parcours> calculerTournees(Habitation depot, List<Truck> camions) {
         // 1. MST
         ArrayList<Arrete> mst = kruskal();
 
