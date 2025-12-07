@@ -5,13 +5,14 @@ import java.util.*;
 import java.io.*;
 
 public class GrapheVille {
+    final double SEUIL_FUSION_CLASSIQUE = 0.0001;
     public HashMap<String, Habitation> listeHabitations = new HashMap<>();
     public HashMap<String, Rue> listeRues = new HashMap<>();
     public HashMap<String, Intersection> intersections = new HashMap<>();
 
-    int distanceMax = 20; //Peut être amener à changer en fonction de ville/campage/
+    int distanceMax = 20;
 
-    private double distance(Habitation a, Habitation b) { // savoir la distance entre 2 habitations pour savoir quel habitation est sur la rue adjacente
+    private double distance(Habitation a, Habitation b) {
         double dx = a.x - b.x;
         double dy = a.y - b.y;
         return Math.sqrt(dx * dx + dy * dy);
@@ -241,7 +242,7 @@ public class GrapheVille {
 
                 villes.add(ville);
 
-                index = q2; // continuer plus loin dans le fichier
+                index = q2;
             }
 
         } catch (Exception e) {
@@ -265,8 +266,8 @@ public class GrapheVille {
     }
 
     public void chargerIntersections(String fichier) {
-
         String villeChoisie = choixVilleIntersections(fichier);
+        HashMap<String, Intersection> lieuxSpeciaux = new HashMap<>();
 
         try {
             StringBuilder sb = new StringBuilder();
@@ -274,85 +275,130 @@ public class GrapheVille {
                 String line;
                 while ((line = br.readLine()) != null) sb.append(line);
             }
-
             String json = sb.toString();
-
-            // Découper en features
             String[] features = json.split("\\{\\\"type\\\":\\\"Feature\\\"");
 
             for (String f : features) {
                 if (!f.contains("coordinates")) continue;
-
-                // EXTRACTION CONTEXT
                 int iCtx = f.indexOf("\"context\"");
                 if (iCtx < 0) continue;
-
                 int cColon = f.indexOf(":", iCtx);
                 int cQ1 = f.indexOf("\"", cColon + 1);
                 int cQ2 = f.indexOf("\"", cQ1 + 1);
-
-                if (cColon < 0 || cQ1 < 0 || cQ2 < 0) continue;
-
                 String context = f.substring(cQ1 + 1, cQ2);
                 String ville = context.split(",")[0].trim();
 
-                // NON MATCH → on saute
                 if (!ville.equals(villeChoisie)) continue;
 
-                // EXTRACTION COORDS
                 int iCoord = f.indexOf("\"coordinates\"");
                 int iStart = f.indexOf("[", iCoord);
                 int iEnd = f.indexOf("]", iCoord);
-
-                if (iCoord < 0 || iStart < 0 || iEnd < 0) continue;
-
                 String coordStr = f.substring(iStart + 1, iEnd);
                 String[] parts = coordStr.split(",");
+                double lon = Double.parseDouble(parts[0]);
+                double lat = Double.parseDouble(parts[1]);
 
-                if (parts.length < 2) continue;
-
-                float lon = Float.parseFloat(parts[0]);
-                float lat = Float.parseFloat(parts[1]);
-
-                // EXTRACTION NAME (rues)
                 int iName = f.indexOf("\"name\"");
-                if (iName < 0) continue;
+                int nQ1 = f.indexOf("\"", iName + 6 + 1);
+                int nQ2 = f.indexOf("\"", nQ1 + 1);
+                String nameRaw = f.substring(nQ1 + 1, nQ2);
 
-                int q1 = f.indexOf("\"", iName + 6 + 1);
-                int q2 = f.indexOf("\"", q1 + 1);
+                Intersection interTrouvee = null;
+                boolean isHub = false;
 
-                if (q1 < 0 || q2 < 0) continue;
+                // CAS HUB (Place/Rond-Point/CArrefour/Square)
+                if (estUnLieuSpecial(nameRaw)) {
+                    String nomLieu = extraireNomLieu(nameRaw);
 
-                String name = f.substring(q1 + 1, q2);
+                    if (nomLieu != null) {
+                        isHub = true;
+                        if (lieuxSpeciaux.containsKey(nomLieu)) {
+                            interTrouvee = lieuxSpeciaux.get(nomLieu);
+                        } else {
+                            interTrouvee = new Intersection(lon, lat);
+                            interTrouvee.nom = nomLieu; // ICI : On définit le nom du sommet
 
-                // CREATION INTERSECTION
-                Intersection inter = new Intersection(lon, lat);
-                for (String r : name.split(" / ")) inter.addRue(nettoyerNomRue(r.trim()));
+                            lieuxSpeciaux.put(nomLieu, interTrouvee);
+                            intersections.put("HUB_" + nomLieu, interTrouvee);
+                        }
+                    }
+                }
 
-                String key = lon + "_" + lat;
+                // PAs HUB mais intersection normal
+                if (interTrouvee == null) {
+                    for (Intersection existante : intersections.values()) {
+                        // On ne touche pas aux Hubs via la distance
+                        if (existante.nom != null) continue;
 
-                intersections.put(key, inter);
+                        double dLat = Math.abs(existante.lat - lat);
+                        double dLon = Math.abs(existante.lon - lon);
+                        if (dLat > SEUIL_FUSION_CLASSIQUE || dLon > SEUIL_FUSION_CLASSIQUE) continue;
+
+                        double dist = Math.sqrt(dLat*dLat + dLon*dLon);
+                        if (dist < SEUIL_FUSION_CLASSIQUE) {
+                            interTrouvee = existante;
+                            break;
+                        }
+                    }
+                }
+
+                if (interTrouvee == null) {
+                    interTrouvee = new Intersection(lon, lat);
+                    String key = String.format(Locale.US, "%.7f_%.7f", lon, lat);
+                    intersections.put(key, interTrouvee);
+                }
+
+                for (String r : nameRaw.split(" / ")) {
+                    String ruePropre = nettoyerNomRue(r.trim());
+
+                    // Si Hub, on n'ajoute pas le nom du Hub dans la liste des rues mais on le met en nom de l'intersection
+                    if (interTrouvee.nom != null && ruePropre.equals(interTrouvee.nom)) {
+                        continue;
+                    }
+
+                    // On n'ajoute pas non plus les noms vides
+                    if (!ruePropre.isEmpty()) {
+                        interTrouvee.addRue(ruePropre);
+                    }
+                }
             }
 
-            System.out.println("Intersections chargées : " + intersections.size());
+            // Conversion en Liste pour le tri
+            List<Intersection> listeTriee = new ArrayList<>(intersections.values());
+
+            // Tri par nombre de rues décroissant (Degré)
+            listeTriee.sort((i1, i2) -> Integer.compare(i2.rues.size(), i1.rues.size()));
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    private boolean estUnLieuSpecial(String name) {
+        String n = name.toLowerCase();
+        return n.contains("place") || n.contains("rond-point") ||
+                n.contains("carrefour") || n.contains("square");
+    }
+
+    private String extraireNomLieu(String name) {
+        String[] parties = name.split(" / ");
+        for (String partie : parties) {
+            if (estUnLieuSpecial(partie)) {
+                return nettoyerNomRue(partie.trim());
+            }
+        }
+        return null;
+    }
+
     private String nettoyerNomRue(String rue) {
         if (rue == null) return null;
 
-        // 1) Supprimer les codes départementaux type D61, D906, D128, D61E, etc.
         rue = rue.replaceAll("\\s+D\\d+[A-Z]?", "");
 
-        // 2) Supprimer les sections Optionnelles après un |
         if (rue.contains("|")) {
             rue = rue.substring(0, rue.indexOf("|")).trim();
         }
 
-        // 3) Supprimer "Sortie ..." si présent
         if (rue.contains("Sortie")) {
             rue = rue.substring(0, rue.indexOf("Sortie")).trim();
         }
@@ -361,7 +407,6 @@ public class GrapheVille {
     }
 
     private String normaliserRue(String rue) {
-        // pour l’instant, on réutilise exactement la même logique
         return nettoyerNomRue(rue);
     }
 
@@ -379,15 +424,12 @@ public class GrapheVille {
 
     public void connecterHabitationsParIntersections() {
 
-        // 1) Index des habitations par rue normalisée
         HashMap<String, List<Habitation>> habitationsParRue = construireIndexHabitationsParRue();
 
         int nbArretesAjoutees = 0;
 
-        // 2) Parcours de toutes les intersections de la ville choisie
         for (Intersection inter : intersections.values()) {
 
-            // Pour chaque intersection, on va trouver au plus 1 habitation par rue
             HashMap<String, Habitation> habitationPlusProcheParRue = new HashMap<>();
 
             for (String nomRueBrut : inter.rues) {
@@ -415,8 +457,6 @@ public class GrapheVille {
                 }
             }
 
-            // 3) Si l’intersection relie au moins 2 rues ayant des habitations,
-            // on connecte ces habitations entre elles
             ArrayList<Habitation> habsInter =
                     new ArrayList<>(habitationPlusProcheParRue.values());
 
@@ -453,7 +493,7 @@ public class GrapheVille {
 
     public void connecterViaIntersectionsBestPair() {
 
-        // Prépare un map rue -> liste d'habitations pour faciliter les accès
+        // Prépare un map rue : liste d'habitations pour faciliter les accès
         HashMap<String, ArrayList<Habitation>> maisonsParRue = new HashMap<>();
         for (Rue r : listeRues.values()) {
             maisonsParRue.put(r.nomRue, new ArrayList<>(r.listeHabitation.values()));
@@ -461,7 +501,6 @@ public class GrapheVille {
 
         int nbAretesCreees = 0;
 
-        // Pour chaque intersection
         for (Model.Intersection.Intersection inter : intersections.values()) {
 
             // On récupère la liste des rues de cette intersection
@@ -497,7 +536,7 @@ public class GrapheVille {
                         }
                     }
 
-                    // Si on a trouvé un couple valide, on crée l'arête
+                    // Si on a trouve un couple valide, on crée l'arête
                     if (bestH1 != null && bestH2 != null &&
                             !bestH1.listeVoisinsHabitations.contains(bestH2)) {
 
@@ -518,6 +557,63 @@ public class GrapheVille {
         }
 
         System.out.println("Connexions via intersections (best pair) ajoutées : " + nbAretesCreees + " arêtes.");
+    }
+
+    public void construireGraphe() {
+        System.out.println("Construction du graphe topologique...");
+
+        HashMap<String, ArrayList<Intersection>> rueVersIntersections = new HashMap<>();
+
+        for (Intersection inter : intersections.values()) {
+            for (String nomRue : inter.rues) {
+                if (nomRue == null || nomRue.isEmpty()) continue;
+                if (inter.nom != null && nomRue.equals(inter.nom)) continue;
+
+                rueVersIntersections.putIfAbsent(nomRue, new ArrayList<>());
+                rueVersIntersections.get(nomRue).add(inter);
+            }
+        }
+
+        int nbSegments = 0;
+
+        // Création des liens
+        for (Map.Entry<String, ArrayList<Intersection>> entry : rueVersIntersections.entrySet()) {
+            String nomRue = entry.getKey();
+            ArrayList<Intersection> points = entry.getValue();
+
+            if (points.size() < 2) continue;
+
+            points.sort((i1, i2) -> Double.compare(i1.lon, i2.lon));
+
+            for (int i = 0; i < points.size() - 1; i++) {
+                Intersection depart = points.get(i);
+                Intersection arrivee = points.get(i + 1);
+
+                if (depart == arrivee) continue;
+
+                // Calcul distance approximative (en mètres)
+                double dist = calculerDistanceMetres(depart, arrivee);
+
+                // Ajout bidirectionnel
+                depart.addVoisin(arrivee, dist, nomRue);
+                arrivee.addVoisin(depart, dist, nomRue);
+
+                nbSegments++;
+            }
+        }
+        System.out.println("Graphe construit : " + nbSegments + " segments de routes.");
+    }
+
+    // Distance entre intersections
+    private double calculerDistanceMetres(Intersection a, Intersection b) {
+        double latMoyenne = Math.toRadians((a.lat + b.lat) / 2.0);
+        double mPerDegLat = 111132.954 - 559.822 * Math.cos(2 * latMoyenne);
+        double mPerDegLon = 111412.84 * Math.cos(latMoyenne);
+
+        double dLat = (a.lat - b.lat) * mPerDegLat;
+        double dLon = (a.lon - b.lon) * mPerDegLon;
+
+        return Math.sqrt(dLat * dLat + dLon * dLon);
     }
 
 }

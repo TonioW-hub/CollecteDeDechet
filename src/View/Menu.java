@@ -1,6 +1,7 @@
 package View;
 
 import Model.*;
+import Model.Intersection.*;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
@@ -93,14 +94,16 @@ public class Menu extends JFrame {
         String[] nomBoutons = {
                 "BFS - Une habitation", "Dijkstra - Une habitation",
                 "BFS - 10 habitations", "Dijkstra - 10 habitations",
-                "Parcours complet", "MST (Arbre couvrant)"
+                "Parcours complet", "MST (Arbre couvrant)",
+                "Postier Chinois (Eulérien)"
         };
 
         // Les codes correspondants qu'on va passer aux méthodes
         String[] codesAlgos = {
                 "bfs1", "dijkstra1",
                 "bfs10", "dijkstra10",
-                "touteVille", "mst"
+                "touteVille", "mst",
+                "postier"
         };
 
         // On crée tous les boutons
@@ -290,6 +293,73 @@ public class Menu extends JFrame {
                 resultat = h01.touteVille(entrepot, interfaceVille);
                 break;
 
+            case "postier":
+                System.out.println("Lancement Postier Chinois");
+
+                grapheVille.construireGraphe();
+
+                H02_Postier postierAlgo = new H02_Postier(grapheVille.intersections);
+
+                Intersection departPostier = null;
+
+                for(Intersection i : grapheVille.intersections.values()) {
+                    if(i.nom != null && i.nom.toLowerCase().contains("depot")) {
+                        departPostier = i;
+                        break;
+                    }
+                }
+                if(departPostier == null) {
+                    departPostier = grapheVille.intersections.values().iterator().next();
+                }
+
+                System.out.println("Départ de la tournée : " + (departPostier.nom!=null ? departPostier.nom : "Intersection standard"));
+
+                java.util.List<Intersection> tournee = postierAlgo.resoudre(departPostier);
+
+                StringBuilder sbPostier = new StringBuilder();
+                sbPostier.append("Tournée complète calculée : ").append(tournee.size()).append(" étapes.\n");
+                sbPostier.append("\n");
+
+                int count = 0;
+                int limitAffichage = 50;
+
+                for(int i = 0; i < tournee.size() - 1; i++) {
+                    if(count++ >= limitAffichage) break;
+
+                    Intersection curr = tournee.get(i);
+                    Intersection next = tournee.get(i+1);
+                    String nomRue = "Segment de rue";
+
+                    for(Intersection.Segment s : curr.voisins) {
+                        if(s.destination == next) {
+                            nomRue = s.nomRue;
+                            break;
+                        }
+                    }
+
+                    String departNom = (curr.nom != null) ? "["+curr.nom+"]" : "Inter.";
+                    String arriveeNom = (next.nom != null) ? "["+next.nom+"]" : "Inter.";
+
+                    sbPostier.append(String.format("%3d. De %-15s vers %-15s via %s\n",
+                            count, departNom, arriveeNom, nomRue));
+                }
+
+                if (tournee.size() > limitAffichage) {
+                    sbPostier.append("... et ").append(tournee.size() - limitAffichage).append(" autres segments restants.");
+                }
+
+                JTextArea textArea = new JTextArea(sbPostier.toString());
+                textArea.setRows(20);
+                textArea.setColumns(60);
+                textArea.setEditable(false);
+                textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
+
+                JOptionPane.showMessageDialog(this,
+                        new JScrollPane(textArea),
+                        "Résultat Postier Chinois (Tournée Optimale)",
+                        JOptionPane.INFORMATION_MESSAGE);
+                return;
+
             case "mst":
                 ArrayList<Truck> camions = new ArrayList<>();
                 for (int i = 0; i < 10; i++) {
@@ -300,7 +370,7 @@ public class Menu extends JFrame {
                         "MST terminé !\n10 camions ont été assignés.",
                         "MST Complet",
                         JOptionPane.INFORMATION_MESSAGE);
-                return; // On return direct car MST ne renvoie pas de chemin
+                return; // retourne direct car MST ne renvoie pas de chemin
         }
 
         // 9. On affiche le résultat si y en a un
